@@ -10,6 +10,16 @@ function make_sprites()
  line(48,23,48,12,4)
  ovalfill(41,2,55,14,9)
  ovalfill(44,2,53,9,10)
+ -- Birch, snow pine and snow-covered rock.
+ line(68,10,68,24,7) line(67,18,69,18,5)
+ ovalfill(61,1,74,14,3) ovalfill(64,1,74,10,11)
+ tri(81,21,95,21,88,1,1)
+ tri(82,18,94,18,88,2,6) tri(85,8,91,8,88,0,7)
+ line(88,21,88,24,5)
+ tri(100,12,114,12,106,3,13) tri(102,8,111,8,106,2,7)
+ -- Reeds have no collision; bare trees frame the moor.
+ for x=2,13,3 do line(x,47,x-1,37+(x%3),4) pset(x-1,36,9) end
+ line(28,33,28,56,4) line(28,45,22,39,4) line(28,41,34,35,4)
  memcpy(0,0x6000,8192)
 end
 

@@ -25,6 +25,9 @@ pause; it is excluded from steady-scene performance measurements.
 Generated regions avoid a large stored map. Coordinates are bounded and
 distance calculations scale before squaring to avoid fixed-point overflow.
 Scenery is culled, tree sprites are cached, and particle counts are capped.
+The region expansion reduces the terrain from 144 to 64 quads, uses two gentler
+height waves, caches spur heights and lowers scenery counts. This supports a
+closer 140% default view while keeping the low/high camera and 100-150% range.
 An endless world would need local coordinates and deterministic chunks.
 
 ## Source and packaging
@@ -47,33 +50,39 @@ node tools/make-sweep.js
 
 The Lua harness reads the packaged cartridge. It checks ordered surface slip
 and braking, steering, powered turns, handbrake, reverse, smooth grip changes,
-slope gravity, body pitch, road recovery and projection around both regions.
+slope gravity, body pitch, road recovery and projection around all five regions.
+It also checks mud coasting resistance, passable reeds, authored road/spur
+materials, lake clearance, region cycling and zoom limits.
 Graphics/audio are mocked and numbers are ordinary Lua floating point, so
 this cannot measure native fixed-point behavior or PICO-8 CPU use.
 
 Load `build/quiet_miles_sweep.p8` in PICO-8 and run it to completion. It exercises
-1,600 scenes across both regions at the closest 150% zoom, with full particle
-buffers and two physics steps. It reports peak CPU and sampled over-budget
-frames. The sweep alternates camera height with heading; it is a sample of
-combinations, not an exhaustive rendering guarantee.
+4,800 scenes across five regions at 100%, 140% and 150% zoom, with full particle
+buffers, two driving steps and one camera step. It reports peak CPU and sampled
+over-budget frames. At each of 20 positions per region it samples both camera heights and
+eight headings at each zoom. It remains a sample, not an exhaustive rendering
+guarantee; region setup frames are excluded from the CPU peak. The diagnostic
+does not include every operation in the playable game's two full physics steps
+(such as particle aging and audio updates), so it is not a worst-case frame bound.
 
 Manual checks should cover combined driving inputs, the pause menu, surfaces,
 flat/hilly terrain, both camera heights, and zoom's 100% and 150% endpoints,
-120% default, preview and return to driving.
+140% default, preview and return to driving.
 
 ## Recorded measurements
 
-The assembled cartridge was checked after the source-file split in PICO-8 0.2.7
-Education Edition. It loaded, ran, and accepted combined driving/handbrake input.
+The region expansion was checked in PICO-8 0.2.7 Education Edition. The assembled
+cartridge loaded and ran; manual driving covered Birch Run, Snow Pines and Peat
+Moor, including combined acceleration, steering and handbrake inputs.
 
 | Check | Observed result |
 | --- | --- |
-| Assembled cartridge INFO | 5,566 tokens; 18,578 characters; 7,915 compressed bytes |
-| Closest-zoom sweep, 1,600 scenes | Peak CPU 0.8475 of the 30 fps budget; zero sampled over-budget frames |
-| Earlier wide-framing hilly sweep | Peak CPU 0.9017; zero sampled over-budget frames |
+| Assembled cartridge INFO | 6,330 tokens; 21,425 characters; 8,276 compressed bytes |
+| Five-region sweep, 4,800 scenes | Peak CPU 0.7488 of the 30 fps budget; zero sampled over-budget frames |
+| Manual camera checks | 140% default, 100% and 150% endpoints, preview, both camera heights and flat/rolling terrain |
 
-The closest-zoom sweep was rerun after assembly; the earlier wide-framing result
-is retained for context. These are native observations, not Lua harness results.
+The sweep advances only after drawing each requested view, including after a
+region change. These are native observations, not Lua harness results.
 Rerun native checks after renderer or packaging changes. Keep screenshots and
 exports under ignored `build/` or attach them to the PR rather than tracking
 them in Git.

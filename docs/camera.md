@@ -16,10 +16,11 @@ camera follows travel direction with 15% body-heading influence. Yaw changes
 are smoothed and capped, preserving visible countersteer. Ground-height tracking
 is slower and includes a small look ahead. There is no shake or speed zoom.
 
-Six manual zoom steps span 100-150%, with 120% as the default. Zoom changes
+Six manual zoom steps span 100-150%, with 140% as the default. Zoom changes
 focal length while keeping the car near the same screen height. Closer framing
 shows less surrounding road. Selecting Zoom in settings shows a live preview.
 Zoom survives drive restarts and region changes, but resets with the cartridge.
+The default increased from 120% for a larger car and a closer view of the road.
 
 Follow and projection code is in [camera.lua](../src/camera.lua). Lens, angle
 and screen framing are set at the start of `_draw` in [main.lua](../src/main.lua).
@@ -34,7 +35,9 @@ and screen framing are set at the start of `_draw` in [main.lua](../src/main.lua
 | Road-strip pseudo-3D | Suitable for a forward-only scenic road; branching, reversing and exploration become harder. |
 
 Elevation changes the road mesh, scenery positions and car height. Local slopes
-affect body pitch/roll and acceleration. The terrain is coarse, with no jumps
+affect body pitch/roll and acceleration. An 8x8 terrain mesh replaces the previous
+12x12 mesh; two broad height waves give gentler hills with fewer drawn polygons.
+Each region scales the elevation, with the moor flattest. The terrain has no jumps
 or general depth buffer: terrain is drawn before roads, then scenery and the
 car are depth-bucketed. Difficult viewpoints can expose layering inaccuracies.
 

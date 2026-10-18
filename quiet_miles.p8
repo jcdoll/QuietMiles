@@ -4,6 +4,7 @@ __lua__
 -- quiet miles
 -- a small, unhurried rally study
 #include src/main.lua
+#include src/regions.lua
 #include src/world.lua
 #include src/driving.lua
 #include src/camera.lua

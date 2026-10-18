@@ -2,8 +2,8 @@
 
 A relaxed PICO-8 rally-driving prototype inspired by Art of Rally. The current
 focus is camera position and driving feel: rolling hills, recoverable slides,
-and different grip on dirt and pavement. The choice between free roaming and
-stages is still open. Code, scenery and sound are original.
+and different grip on dirt, pavement, snow and mud. The choice between free roaming
+and stages is still open. Code, scenery and sound are original.
 
 ## Play
 
@@ -30,10 +30,15 @@ includes to resolve. The packaged file also works on desktop.
 | X | Handbrake |
 | P or Enter | Pause menu: settings, road recovery, restart |
 
-Drive Settings offers two regions, rolling or flat terrain, low or high camera
-angles, and 100-150% zoom with a 120% default. Select Zoom for a preview, use
-Left/Right to adjust, and press X to resume. Mixed roads alternate dirt and
-pavement; Snow Test experiments with low grip on the same landscape.
+Drive Settings offers five regions, rolling or flat terrain, low or high camera
+angles, and 100-150% zoom with a 140% default. Select Zoom for a preview, use
+Left/Right to adjust, and press X to resume. Regional roads use authored surface
+sections; choose Dirt, Pavement, Snow or Mud to compare the same roads.
+
+Start in Birch Run for Finnish-inspired woodland with gravel/asphalt stretches.
+Snow Pines has winter scenery and packed snow roads; Peat Moor mixes mud,
+gravel and asphalt around an open wetland. Pine Lake and Ochre Hills remain
+available. See [region details and playtest notes](docs/regions.md).
 
 See [the full controls and comparison guide](docs/controls.md).
 
@@ -50,6 +55,7 @@ Edit these files, then rerun the build for browser play:
 | File | Responsibility |
 | --- | --- |
 | [src/main.lua](src/main.lua) | Initialization, settings, frame loop and UI |
+| [src/regions.lua](src/regions.lua) | Region themes, route anchors and authored surface sections |
 | [src/world.lua](src/world.lua) | Regions, terrain, roads and surface queries |
 | [src/driving.lua](src/driving.lua) | Car physics, recovery, particles and engine pitch |
 | [src/camera.lua](src/camera.lua) | Camera following, projection and visibility |
@@ -82,23 +88,23 @@ to install):
 node tools/make-sweep.js
 ```
 
-Load `build/quiet_miles_sweep.p8` in PICO-8. It samples 1,600 scenes across both
-regions at the closest 150% zoom, exercises physics and particle buffers, and
-reports CPU use against the 30 fps budget. The generated cart is ignored by Git.
+Load `build/quiet_miles_sweep.p8` in PICO-8. It samples 4,800 scenes across all five
+regions at 100%, 140% and 150% zoom, exercises driving with full particle buffers,
+and reports diagnostic CPU use against the 30 fps budget. The generated cart is
+ignored by Git.
 
-See [PICO-8 limits and validation](docs/pico8.md) for prior measurements and
+See [PICO-8 limits and validation](docs/pico8.md) for measurements and
 native checks. Keep screenshots and exports under ignored `build/`.
 
 ## Design notes
 
 - [Direction and game structure](docs/plan.md): priorities, options and next decisions.
 - [Camera and rendering](docs/camera.md): framing, hills and rendering tradeoffs.
-- [Handling and surfaces](docs/handling.md): sliding, grip and future snow regions.
+- [Handling and surfaces](docs/handling.md): sliding, grip and mud resistance.
 
 ## Current scope
 
 The game presents at 30 fps and integrates physics twice per frame at 60 Hz.
-It has two small finite regions, simplified terrain layering, and a quiet audio
-sketch. Snow is a surface test rather than a finished winter level. There are
-no jumps, saved progress or connected world yet. Camera settings last for the
-current session only.
+It has five small finite regions, gentle hills on a coarse terrain mesh, and a
+quiet audio sketch. There are no jumps, saved progress or connected world yet.
+Camera settings last for the current session only.
