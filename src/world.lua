@@ -17,27 +17,28 @@ end
 
 function elevation(x,z)
  if not hills then return 0 end
- local h=13+7*cos(x/240+z/390)+6*sin(z/210)+4*cos((x-z)/155)
- if region==1 then
-  local a=(x+12)/40 local b=(z+3)/51
+ local h=(9+5*cos(x/300+region/9)+4*sin(z/260))*area.rise
+ if area.lake then
+  local pond=area.lake
+  local a=(x-pond[1])/pond[3] local b=(z-pond[2])/pond[4]
   h=h*mid(0,(sqrt(a*a+b*b)-0.95)*0.75,1)
  end
  return h
 end
 
 function surface_id(index)
- if road_mode>1 then
-  if road_mode==4 then return 4 end
-  return road_mode-1
- end
- return flr((index-1)/24)%2+1
+ return road_mode==1 and road[index].surface or road_overrides[road_mode]
+end
+
+function spur_surface()
+ return road_mode==1 and area.spur_surface or road_overrides[road_mode]
 end
 
 function surface_at(x,z)
  local d,i,bx,bz,spurroad=road_distance(x,z)
  local id=surface_id(i)
- if spurroad then id=road_mode==4 and 4 or 1 end
- if d>5.7 then id=road_mode==4 and 4 or 3 end
+ if spurroad then id=spur_surface() end
+ if d>5.7 then id=area.offroad end
  return id,d,i,bx,bz
 end
 
@@ -47,15 +48,15 @@ end
 
 function make_terrain()
  terrain={} grid={}
- for iz=0,12 do
+ for iz=0,8 do
   grid[iz+1]={}
-  for ix=0,12 do grid[iz+1][ix+1]=vertex(-240+ix*40,-240+iz*40) end
+  for ix=0,8 do grid[iz+1][ix+1]=vertex(-240+ix*60,-240+iz*60) end
  end
- for iz=1,12 do
-  for ix=1,12 do
+ for iz=1,8 do
+  for ix=1,8 do
    local a=grid[iz][ix] local b=grid[iz][ix+1]
    local c=grid[iz+1][ix+1] local d=grid[iz+1][ix]
-   local shade=(b.h-a.h+c.h-d.h)/80
+   local shade=(b.h-a.h+c.h-d.h)/120
    local col=land
    if shade>0.07 then col=light end
    add(terrain,{a,b,c,d,x=(a.x+c.x)/2,z=(a.z+c.z)/2,col=col})
@@ -70,23 +71,15 @@ function make_terrain()
   p.h=elevation(p.x,p.z)
  end
  for p in all(scenery) do p.ground=elevation(p.x,p.z) end
+ for p in all(road_dots) do p.h=elevation(p.x,p.z)+0.1 end
 end
 
 function world()
  srand(region*71)
+ area=regions[region]
  road={} scenery={} dust={} marks={}
- local anchors
- if region==1 then
-  anchors={{-93,65},{-114,22},{-98,-35},{-61,-77},
-   {-5,-91},{48,-73},{98,-38},{111,17},
-   {82,65},{35,59},{-4,85},{-54,93}}
-  land=3 light=11 edge=4 gravel=6 water=1
- else
-  anchors={{-95,64},{-118,4},{-84,-49},{-33,-58},
-   {-5,-101},{55,-89},{98,-42},{78,7},
-   {110,58},{59,87},{9,69},{-48,91}}
-  land=4 light=9 edge=5 gravel=6 water=13
- end
+ local anchors=area.anchors
+ land=area.land light=area.light edge=area.edge water=area.water
  local n=#anchors
  for i=1,n do
   local a=anchors[(i-2)%n+1]
@@ -96,7 +89,7 @@ function world()
   for j=0,7 do
    local t=j/8
    add(road,{x=curve(a[1],b[1],c[1],d[1],t),
-    z=curve(a[2],b[2],c[2],d[2],t)})
+    z=curve(a[2],b[2],c[2],d[2],t),surface=b[3]})
   end
  end
  for i=1,#road do local p=road[i]
@@ -106,16 +99,18 @@ function world()
   p.nx=-dz/len p.nz=dx/len
  end
  -- one road network; a spur reaches a quiet lookout
- spur={{x=road[49].x,z=road[49].z},
-  {x=66,z=-28},{x=44,z=-11},{x=28,z=0}}
+ spur={{x=road[49].x,z=road[49].z}}
+ for p in all(area.spur) do add(spur,{x=p[1],z=p[2]}) end
  road_dots={}
 
  for i=1,#spur-1 do sample_road(spur[i],spur[i+1],0.7) end
- for i=1,235 do
+ for i=1,area.trees do
   local x=rnd(290)-145 local z=rnd(290)-145
   local dist=road_distance(x,z)
   if dist>10 and not lake(x,z) then
-   add(scenery,{x=x,z=z,h=6+rnd(7),k=flr(rnd(5)),r=2+rnd(3)})
+   local kind=flr(rnd(5))
+   add(scenery,{x=x,z=z,h=6+rnd(7),k=kind,r=2+rnd(3),
+    solid=area.style~=3 or kind<2})
   end
  end
  make_terrain()
@@ -131,7 +126,8 @@ function sample_road(p,q,w)
 end
 
 function lake(x,z)
- return region==1 and ((x+12)/40)^2+((z+3)/51)^2<1
+ local p=area.lake
+ return p and ((x-p[1])/p[3])^2+((z-p[2])/p[4])^2<1
 end
 
 function nearest(x,z)

@@ -5,6 +5,7 @@ function start_drive()
  ca=car.a cx=car.x cz=car.z ch=car.h
  offroad=false speed=0 help_frames=300
  dust={} marks={} dist=0 current_surface=surface_at(car.x,car.z)
+ car.mu=surfaces[current_surface].force car.k=surfaces[current_surface].k
 end
 
 function recover()
@@ -15,6 +16,8 @@ function recover()
  car.h=elevation(x,z) car.pitch=0 car.roll=0
  ca=car.a cx=x cz=z ch=car.h
  speed=0 dust={} marks={}
+ current_surface=surface_at(x,z)
+ car.mu=surfaces[current_surface].force car.k=surfaces[current_surface].k
 end
 
 function physics_step()
@@ -78,7 +81,7 @@ function drive(throttle,brake,hand,steer)
  if lake(c.x,c.z) then c.x=c.x-c.vx c.z=c.z-c.vz c.vx=c.vx*0.7 c.vz=c.vz*0.7 end
  for p in all(scenery) do
   local dx=c.x-p.x local dz=c.z-p.z
-  if abs(dx)<2.3 and abs(dz)<2.3 then
+  if p.solid and abs(dx)<2.3 and abs(dz)<2.3 then
    local len=length(dx,dz)
    if len<2.3 then
     len=max(0.01,len)

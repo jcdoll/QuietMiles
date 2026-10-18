@@ -40,8 +40,8 @@ function draw_road(i)
  local id=surface_id(i)
  quad(a,b,c,d,surfaces[id].col)
  if a[4]>12 and b[4]>12 and c[4]>12 and d[4]>12 then
-  line(a[1],a[2],b[1],b[2],id==2 and 6 or 4)
-  line(c[1],c[2],d[1],d[2],id==2 and 6 or 4)
+  line(a[1],a[2],b[1],b[2],surfaces[id].edge)
+  line(c[1],c[2],d[1],d[2],surfaces[id].edge)
   if id==2 and i%2==0 then
    local x,y=project(p.x,p.z,p.h+0.1)
    local u,v=project((p.x+q.x)/2,(p.z+q.z)/2,(p.h+q.h)/2+0.1)
@@ -56,12 +56,10 @@ function ground()
  buckets={}
  for i=1,32 do buckets[i]={{},{},{},{}} end
  for t in all(terrain) do
-  if in_view(t.x,t.z,30) then
+  if in_view(t.x,t.z,45) then
    local a=project_vertex(t[1]) local b=project_vertex(t[2])
    local c=project_vertex(t[3]) local d=project_vertex(t[4])
-   local col=t.col
-   if road_mode==4 then col=col==land and 7 or 6 end
-   enqueue(1,{a,b,c,d,col=col},(a[4]+b[4]+c[4]+d[4])/4)
+   enqueue(1,{a,b,c,d,col=t.col},(a[4]+b[4]+c[4]+d[4])/4)
   end
  end
  for i=1,#road do
@@ -71,10 +69,10 @@ function ground()
    enqueue(2,{i=i},depth)
   end
  end
- -- The dirt spur remains part of the same surface query.
+ -- Spur geometry and physics use the same regional material.
  for p in all(road_dots) do
   if p.w<1 and in_view(p.x,p.z,5) then
-   local x,y,k,d=project(p.x,p.z,elevation(p.x,p.z)+0.1)
+   local x,y,k,d=project(p.x,p.z,p.h)
    enqueue(2,{x=x,y=y,k=k,w=p.w},d)
   end
  end
@@ -102,11 +100,12 @@ function ground()
  for i=32,1,-1 do
   for t in all(buckets[i][1]) do quad(t[1],t[2],t[3],t[4],t.col) end
  end
- if region==1 then
-  local middle=point(-12,-3,0.3)
-  local previous=point(28,-3,0.3)
-  for j=1,24 do
-   local next=point(-12+40*cos(j/24),-3+51*sin(j/24),0.3)
+ if area.lake then
+  local p=area.lake
+  local middle=point(p[1],p[2],0.3)
+  local previous=point(p[1]+p[3],p[2],0.3)
+  for j=1,16 do
+   local next=point(p[1]+p[3]*cos(j/16),p[2]+p[4]*sin(j/16),0.3)
    tri(middle[1],middle[2],previous[1],previous[2],next[1],next[2],water)
    previous=next
   end
@@ -117,7 +116,7 @@ function ground()
    if r.i then draw_road(r.i)
    else
     local w=r.k*4
-    ovalfill(r.x-w,r.y-w*sp,r.x+w,r.y+w*sp,road_mode==4 and 7 or 6)
+    ovalfill(r.x-w,r.y-w*sp,r.x+w,r.y+w*sp,surfaces[spur_surface()].col)
    end
   end
   for p in all(bucket[3]) do pset(p.x,p.y,p.col) end
@@ -167,10 +166,18 @@ end
 
 function draw_tree(p,x,y,k)
  local h=p.h*k*cp local w=p.r*k
- ovalfill(x-w,y-1,x+w+2,y+1,1)
- if region==1 then
-  sspr(0,0,16,25,x-w,y-h,w*2,h)
- elseif p.k<2 then
-  sspr(40,0,16,24,x-w,y-h,w*2,h)
- else sspr(20,0,16,13,x-w,y-h*0.45,w*2,h*0.45) end
+ if p.solid then ovalfill(x-w,y-1,x+w+2,y+1,area.style==2 and 13 or 1) end
+ local sx=0 local sy=0 local sh=25
+ if area.style==1 then
+  if p.k==0 then sx=60 end
+ elseif area.style==2 then
+  sx=80
+  if p.k==0 then sx=100 sh=13 h=h*0.4 end
+ elseif area.style==3 then
+  sy=32
+  if p.k<2 then sx=20
+  else sh=16 h=h*0.4 end
+ elseif p.k<2 then sx=40 sh=24
+ else sx=20 sh=13 h=h*0.45 end
+ sspr(sx,sy,16,sh,x-w,y-h,w*2,h)
 end
