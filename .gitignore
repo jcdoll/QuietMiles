@@ -1,1 +1,13 @@
 /build/
+# Keep screenshots and runtime exports out of source control.
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.wav
+*.mp3
+*.ogg
+*.zip
+*.exe
+*.dll
+*.bin

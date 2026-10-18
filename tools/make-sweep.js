@@ -1,6 +1,8 @@
-// Generate a diagnostic cartridge; quiet_miles.p8 remains the game source.
+// Generate a native diagnostic cartridge from the same source as the game.
 const fs = require('node:fs');
-const source = fs.readFileSync('quiet_miles.p8', 'utf8').replaceAll('\r\n', '\n');
+const path = require('node:path');
+const { readCartridge, buildDir } = require('./cartridge');
+const source = readCartridge();
 const diagnostic = `
 -- Native QA only; excluded from the playable cartridge.
 local base_init=_init
@@ -52,6 +54,6 @@ end
 
 const marker = '\n__gfx__\n';
 if (!source.includes(marker)) throw new Error('Missing cartridge graphics section');
-fs.mkdirSync('build', { recursive: true });
-fs.writeFileSync('build/quiet_miles_sweep.p8', source.replace(marker, diagnostic + marker));
+fs.mkdirSync(buildDir, { recursive: true });
+fs.writeFileSync(path.join(buildDir, 'quiet_miles_sweep.p8'), source.replace(marker, diagnostic + marker));
 console.log('Created build/quiet_miles_sweep.p8; load it in PICO-8 to measure native CPU use.');

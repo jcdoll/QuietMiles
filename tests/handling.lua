@@ -17,8 +17,8 @@ function tostr(n) return tostring(n) end
 function btn() return false end
 function btnp() return false end
 for _,f in ipairs({'sspr','memcpy','pal','poke','sfx','menuitem','print','pset','line','rectfill','circfill','ovalfill','cls'}) do _G[f]=function(...) for _,v in ipairs({...}) do if type(v)=='number' then assert(v==v and math.abs(v)<1e8,'invalid drawing coordinate') end end end end
--- Load the delivered cartridge, avoiding a second copy of the game source.
-local cart=assert(io.open('quiet_miles.p8','rb'))
+-- Run tools/build.js first; test exactly the cartridge used for browser play.
+local cart=assert(io.open('build/quiet_miles.p8','rb'))
 local text=cart:read('*a'):gsub('\r\n','\n')
 cart:close()
 local source=assert(text:match('__lua__\n(.-)\n__gfx__'),'missing cartridge sections')
